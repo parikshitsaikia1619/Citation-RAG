@@ -1,0 +1,4 @@
+gradio==4.39.0
+llama_index==0.10.58
+torch==2.3.0
+transformers==4.42.3

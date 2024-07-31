@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from llama_index.llms.openai import OpenAI
 from llama_index.core.query_engine import CitationQueryEngine
@@ -50,7 +50,7 @@ Settings.embed_model = embed_model
 Settings.llm = llm
 
 # Read the pdf
-documents = SimpleDirectoryReader("../book/").load_data()
+documents = SimpleDirectoryReader("../text/").load_data()
 
 print(f"no. of doc chunks: {len(documents)}\n")
 
@@ -59,17 +59,17 @@ sentence_node_parser = SentenceWindowNodeParser.from_defaults(
     window_size=3,
     window_metadata_key="window",
     original_text_metadata_key="original_text",
-    #include_metadata=False,
+    include_metadata=True,
 )
 
 # Parse documents into nodes
 sentence_nodes = sentence_node_parser.get_nodes_from_documents(documents)
 sentence_index = VectorStoreIndex(sentence_nodes)
-
+top_k = 3
 query_engine = CitationQueryEngine.from_args(
     sentence_index,
     citation_chunk_size=512,
-    similarity_top_k=2,
+    similarity_top_k=top_k,
     node_postprocessors=[
         MetadataReplacementPostProcessor(target_metadata_key="window")
     ],
@@ -102,12 +102,13 @@ def search_query(query):
     print(citation_idx)
     
     citations = []
-    metakeys = ['page_label', 'file_name', 'file_type', 'file_size', 'creation_date', 'last_modified_date']
-    for cit in citation_idx:
+    metakeys = ['file_path', 'file_name', 'file_type', 'creation_date', 'last_modified_date']
+    
+    for idx in range(top_k):
         meta_text = ""
         for key in metakeys:
-            meta_text+=f"{key}: {response.source_nodes[cit].metadata[key]}\n"
-        citations.append(response.source_nodes[cit].get_text()+"\n"+meta_text)
+            meta_text+=f"{key}: {response.source_nodes[idx].metadata[key]}\n"
+        citations.append(response.source_nodes[idx].get_text()+"\n"+meta_text)
         
     citation_text = "\n===========================================\n".join([f"{citation}" for i, citation in enumerate(citations)])
     
@@ -139,4 +140,4 @@ with gr.Blocks() as demo:
     citation_button.click(show_citations, outputs=citation_text)
 
 # Launch the interface
-demo.launch(server_name="192.168.0.44")
+demo.launch()

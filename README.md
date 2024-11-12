@@ -1,5 +1,5 @@
 # Citation RAG
- A rag that answers users query and shows citations for reference. This rag application is made using llama-index, llama-3 and gradio
+ A RAG app that answers users query and shows citations for reference. This rag application is made using llama-index, llama-3 and gradio
  
 # Step to Run
 1. pdf.py: This script reads a PDF file and saves its content as a .txt file.
